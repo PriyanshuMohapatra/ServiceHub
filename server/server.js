@@ -37,18 +37,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ FIXED CORS CONFIG (NO ERRORS THROWN)
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (
+      !origin ||
+      origin === process.env.CLIENT_URL ||
+      origin.endsWith(".netlify.app") ||
+      origin.includes("localhost")
+    ) {
       return callback(null, true);
     }
+
     console.log("❌ CORS BLOCKED:", origin);
-    return callback(null, false); // 🚨 do NOT throw error
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 };
+
 
 // Apply CORS
 app.use(cors(corsOptions));

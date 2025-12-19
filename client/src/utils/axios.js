@@ -9,7 +9,7 @@ const isLocalhost =
 // ✅ Use proxy in local, real backend in prod
 const API_URL = isLocalhost
   ? "/api"
-  : `${import.meta.env.VITE_API_BASE_URL}/api`;
+  : import.meta.env.VITE_API_BASE_URL;
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
