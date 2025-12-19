@@ -10,29 +10,26 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 // Load env vars
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// Try server/.env first, then repo-root .env (common setup)
 dotenv.config({ path: join(__dirname, ".env") });
 dotenv.config({ path: join(__dirname, "..", ".env") });
 
-// Import routes (after env is loaded)
+// Import routes
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import providerRoutes from "./routes/providerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-// Connect to database
+// Connect DB
 connectDB();
 
 const app = express();
 
 // Allowed Frontend Domains
 const allowedOrigins = [
-  process.env.CLIENT_URL,                         // Production Frontend (Vercel)
-  // process.env.CLIENT_URL_2,                       // Preview Deployments (optional)
-  "http://localhost:5173",                        // Local Development (Vite)
+  process.env.CLIENT_URL,        // Production (Netlify)
+  "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:5174",
-                          // Alternative Vite port
 ].filter(Boolean);
 
 // Middleware
@@ -40,25 +37,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS Setup
+// ✅ FIXED CORS CONFIG (NO ERRORS THROWN)
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log("❌ CORS BLOCKED:", origin);
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, true);
     }
+    console.log("❌ CORS BLOCKED:", origin);
+    return callback(null, false); // 🚨 do NOT throw error
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 };
 
+// Apply CORS
 app.use(cors(corsOptions));
-
-// Preflight Requests
-app.options("*", cors(corsOptions));
-
+app.options("*", cors(corsOptions)); // preflight support
 
 // Routes
 app.use("/api/auth", authRoutes);
